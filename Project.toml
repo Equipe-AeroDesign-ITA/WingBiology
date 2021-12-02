@@ -1,0 +1,16 @@
+name = "WingBiology"
+uuid = "df330089-7e0a-449a-92f8-eebf506916f7"
+authors = ["pedrosecchi67 <pedrosecchimail@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+Arpack = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+Conda = "8f4d0f93-b110-5947-807f-2305c1781a2d"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+LinearMaps = "7a12625a-238d-50fd-b39a-03d52299707e"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+SparseDiffTools = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
