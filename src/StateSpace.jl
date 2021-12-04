@@ -53,7 +53,7 @@ Get x axis angular defflection of a point in the flexible structure
 
 Get y axis angular defflection of a point in the flexible structure
 """
-@inline get_θz(q::AbstractVector, i::Int64) = q[(i - 1) * 6 + 5]
+@inline get_θy(q::AbstractVector, i::Int64) = q[(i - 1) * 6 + 5]
 """
 ```
 	get_θz(q::AbstractVector, i::Int64)
