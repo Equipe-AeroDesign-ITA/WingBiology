@@ -68,7 +68,7 @@ function engine_influence(
 		)
 	)
 
-	cross_dir = cross(ξ⃗, r⃗ ./ r)
+	cross_dir = cross(ξ⃗, r⃗ ./ (r + 1e-5))
 	@. - ξ⃗ * ΔV + cross_dir * ΔW
 
 end
