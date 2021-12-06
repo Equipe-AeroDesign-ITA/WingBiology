@@ -413,7 +413,14 @@ function add_beam!(
 	x̂ ./= L
 
 	ŷ .-= x̂ * (x̂ ⋅ ŷ)
-	ŷ ./= norm(ŷ)
+	ny = norm(ŷ)
+	if ny < 1e-5
+		ŷ = [0.0, 1.0, 0.0]
+		
+		ŷ .-= x̂ * (x̂ ⋅ ŷ)
+		ny = norm(ŷ)
+	end
+	ŷ ./= ny
 
 	ẑ = cross(x̂, ŷ)
 
