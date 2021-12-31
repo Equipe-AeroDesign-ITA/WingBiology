@@ -143,9 +143,17 @@ function Arnoldi_solve!(
         ]...
     )
 
+    eig = let M = (A - D), K = JV
+        eigen(
+            M \ K
+        )
+    end
+
     x .-= A * (JV \ r)
 
     A, (
+        ϕ = eig.vectors,
+        λ = eig.values,
         JA = JV,
         B = D
     )

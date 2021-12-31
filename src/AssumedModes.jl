@@ -64,6 +64,7 @@ end
 		x::AbstractVector,
 		U∞::Fg;
 		n_eig::Int64 = 6,
+        transient_aerodynamics::Bool = true,
 		kwargs...
 	) where Fg
 ```
@@ -75,6 +76,8 @@ Proper Orthogonal Decomposition method
 * `q`: variables of interest
 * `U∞`: freestream velocity
 * `n_eig`: number of eigenvalues to consider
+* `transient_aerodynamics`: whether to use transient 
+aerodynamics for calculations
 * `kwargs`: keyword arguments for `state_space`
 """
 function assumed_modes_solve(
@@ -82,6 +85,7 @@ function assumed_modes_solve(
     x::AbstractVector,
     U∞::Fg;
     n_eig::Int64 = 6,
+    transient_aerodynamics::Bool = true,
     kwargs...
 ) where {Fg}
 
@@ -165,10 +169,14 @@ function assumed_modes_solve(
         dΓ!dx = [dΓ!dx Γ]
     end
 
-    D = hcat(
-        [
-            f(x; Γt = dΓ!dx[:, i])[1] .- r for i = 1:size(dΓ!dx, 2)
-        ]...
+    D = (
+        transient_aerodynamics ?
+        hcat(
+            [
+                f(x; Γt = dΓ!dx[:, i])[1] .- r for i = 1:size(dΓ!dx, 2)
+            ]...
+        ) :
+        nothing
     )
 
     #=
@@ -180,9 +188,13 @@ function assumed_modes_solve(
     )
     =#
 
-    eig = let M = (A - D), K = JV
+    eig = let M = (
+        transient_aerodynamics ?
+        (A - D) :
+        A
+    ), K = JV
         eigen(
-            inv(M' * M) * (M' * K)
+            M \ K
         )
     end
 

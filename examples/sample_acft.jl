@@ -113,3 +113,15 @@ A, ts, qs = backward_Euler(acft, q0, U∞; fixed_points = fixed_points, transien
 
 writedlm("Arnoldi_basis.dat", [q0 A])
 writedlm("results.dat", [ts qs'])
+
+#=
+@info "Using full Jacobian to deduce eigenvalues"
+
+eig = get_eigen(acft, q0, U∞) # ; fixed_points = fixed_points)
+
+for (i, λ) in enumerate(eig.values)
+    if abs(λ) < 40.0 * (2 * π)
+        @show i, λ
+    end
+end
+=#

@@ -753,7 +753,8 @@ end
 		fixed_points::Vector{Fi} = Int64[],
 		engine_loads::Matrix{Fg} = Matrix{Fg}(undef, 2, 0),
 		amplification_factor::Float64 = 1.0,
-		aerodynamic_forces::Bool = true
+		aerodynamic_forces::Bool = true,
+		structural_damping::Bool = true
 	) where {Fg, Fi <: Int}
 ```
 
@@ -773,6 +774,7 @@ Function to get a dynamic analysis of an aircraft, given a state vector
 * `cref`: reference chord
 * `bref`: reference span
 * `∂Γ!∂t`: derivative of circulation over time, for unsteady simulations
+* `structural_damping`: boolean indicating whether to consider structural damping
 * `engine_loads`: forces and moments at the engines, as in:
 
 ```
@@ -829,6 +831,7 @@ function state_space(
 	fixed_points::Vector{Fi} = Int64[],
 	engine_loads::Matrix{Fg} = Matrix{Fg}(undef, 2, 0),
 	amplification_factor::Float64 = 1.0,
+	structural_damping::Bool = true,
 	aerodynamic_forces::Bool = true
 ) where {Fg, Fi <: Int}
 
@@ -980,30 +983,67 @@ function state_space(
 	is_calculated = zeros(Bool, length(acft.beams))
 	elastic_effort = Vector{Any}(undef, length(acft.beams))
 
+	V = [
+		- cosd(α) * cosd(β) * U∞,
+		- cosd(α) * sind(β) * U∞,
+		- sind(α) * U∞
+	]
+	ω = [
+		- p,
+		q,
+		- r
+	]
+
 	for sect in acft.wing_strips
 		is_calculated[sect.ibeam] = true
+
+		g = acft.beams[sect.ibeam].g * structural_damping
 
 		θ1 = [
 			get_θx(x, sect.ipt1),
 			get_θy(x, sect.ipt1),
 			get_θz(x, sect.ipt1)
-		]
+		] .+ (
+			[
+				get_̇θx(x, sect.ipt1),
+				get_̇θy(x, sect.ipt1),
+				get_̇θz(x, sect.ipt1)
+			] .- ω
+		) .* g
 		θ2 = [
 			get_θx(x, sect.ipt2),
 			get_θy(x, sect.ipt2),
 			get_θz(x, sect.ipt2)
-		]
+		] .+ (
+			[
+				get_̇θx(x, sect.ipt2),
+				get_̇θy(x, sect.ipt2),
+				get_̇θz(x, sect.ipt2)
+			] .- ω
+		) .* g
 
 		x1 = [
 			get_u(x, sect.ipt1),
 			get_v(x, sect.ipt1),
 			get_w(x, sect.ipt1)
-		] .- acft.points[:, sect.ipt1]
+		] .- acft.points[:, sect.ipt1] .+ (
+			[
+				get_̇u(x, sect.ipt1),
+				get_̇v(x, sect.ipt1),
+				get_̇w(x, sect.ipt1)
+			] .- V
+		) .* g
 		x2 = [
 			get_u(x, sect.ipt2),
 			get_v(x, sect.ipt2),
 			get_w(x, sect.ipt2)
-		] .- acft.points[:, sect.ipt2]
+		] .- acft.points[:, sect.ipt2] .+ (
+			[
+				get_̇u(x, sect.ipt2),
+				get_̇v(x, sect.ipt2),
+				get_̇w(x, sect.ipt2)
+			] .- V
+		) .* g
 
 		x1 .+= cross(
 			θ1,
@@ -1053,27 +1093,53 @@ function state_space(
 		if !is_calculated[ibeam]
 			is_calculated[ibeam] = true
 
+			g = beam.g * structural_damping
+
 			θ1 = [
 				get_θx(x, beam.ipt1),
 				get_θy(x, beam.ipt1),
 				get_θz(x, beam.ipt1)
-			]
+			] .+ (
+				[
+					get_̇θx(x, beam.ipt1),
+					get_̇θy(x, beam.ipt1),
+					get_̇θz(x, beam.ipt1)
+				] .- ω
+			) .* g
 			θ2 = [
 				get_θx(x, beam.ipt2),
 				get_θy(x, beam.ipt2),
 				get_θz(x, beam.ipt2)
-			]
+			] .+ (
+				[
+					get_̇θx(x, beam.ipt2),
+					get_̇θy(x, beam.ipt2),
+					get_̇θz(x, beam.ipt2)
+				] .- ω
+			) .* g
 
 			x1 = [
 				get_u(x, beam.ipt1),
 				get_v(x, beam.ipt1),
 				get_w(x, beam.ipt1)
-			] .- acft.points[:, beam.ipt1]
+			] .- acft.points[:, beam.ipt1] .+ (
+				[
+					get_̇u(x, beam.ipt1),
+					get_̇v(x, beam.ipt1),
+					get_̇w(x, beam.ipt1)
+				] .- V
+			) .* g
 			x2 = [
 				get_u(x, beam.ipt2),
 				get_v(x, beam.ipt2),
 				get_w(x, beam.ipt2)
-			] .- acft.points[:, beam.ipt2]
+			] .- acft.points[:, beam.ipt2] .+ (
+				[
+					get_̇u(x, beam.ipt2),
+					get_̇v(x, beam.ipt2),
+					get_̇w(x, beam.ipt2)
+				] .- V
+			) .* g
 
 			pl = beam.K * [
 				beam.Mtosys * x1;
@@ -1116,17 +1182,6 @@ function state_space(
 	end
 
 	qd = similar(f)
-
-	V = [
-		- cosd(α) * cosd(β) * U∞,
-		- cosd(α) * sind(β) * U∞,
-		- sind(α) * U∞
-	]
-	ω = [
-		- p,
-		q,
-		- r
-	]
 
 	ident = Matrix{Float64}(I * 1e-5, 3, 3)
 	for (im, mass) in enumerate(acft.masses)

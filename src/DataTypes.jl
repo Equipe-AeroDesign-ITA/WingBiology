@@ -211,6 +211,7 @@ end
 		ipt1::Int64
 		ipt2::Int64
 		K::Matrix{Fg}
+		g::Fg
 		Mtosys::Matrix{Fg}
 		Mtouni::Matrix{Fg}
 	end
@@ -222,6 +223,7 @@ struct Beam{Fg <: Real}
 	ipt1::Int64
 	ipt2::Int64
 	K::Matrix{Fg}
+	g::Fg
 	Mtosys::Matrix{Fg}
 	Mtouni::Matrix{Fg}
 end
@@ -377,7 +379,8 @@ end
 		EIy::Fg = Fmax,
 		EIz::Fg = Fmax,
 		GJ::Fg = Fmax,
-		Ixx::Fg = 1e-3
+		Ixx::Fg = 1e-3,
+		g::Fg = 1e-2
 	) where Fg
 ```
 
@@ -393,6 +396,7 @@ Add a beam to the aircraft model
 * `GJ`: x axis torsional stiffness
 * `Ixx`: moment of inertia around beam axis (per unit length)
 * `ŷ`: y direction used to define the sectional coordinate system
+* `g`: structural damping coefficient (damping matrix is set to `- Kjg`)
 """
 function add_beam!(
 	acft::Aircraft{Fg},
@@ -404,7 +408,8 @@ function add_beam!(
 	EIy::Fg = Fmax,
 	EIz::Fg = Fmax,
 	GJ::Fg = Fmax,
-	Ixx::Fg = 1e-3
+	Ixx::Fg = 1e-3,
+	g::Fg = 1e-2
 ) where Fg
 
 	x̂ = acft.points[:, ipt2] .- acft.points[:, ipt1]
@@ -437,7 +442,7 @@ function add_beam!(
 		EIz
 	)
 
-	push!(acft.beams, Beam{Fg}(ipt1, ipt2, K, Mtosys, Mtouni))
+	push!(acft.beams, Beam{Fg}(ipt1, ipt2, K, g, Mtosys, Mtouni))
 
 	Ilat = m * L ^ 3 / 3
 
@@ -559,7 +564,8 @@ flat_plate = Airfoil{Float64}(0.0, 2 * π, 0.0, 0.0, [0.0, 0.0, 0.0], -0.7, 0.7)
 		EIy::Fg = Fmax,
 		EIz::Fg = Fmax,
 		GJ::Fg = Fmax,
-		Ixx::Fg = 1e-3
+		Ixx::Fg = 1e-3,
+		g::Fg = 1e-2
 	) where Fg
 ```
 
@@ -583,6 +589,7 @@ Defaults to x axis
 the `ŷ` axis
 * `GJ`: torsional resistance
 * `Ixx`: inertia of the wing section around its elastic center (per unit length)
+* `g`: damping coefficient for section beam
 """
 function add_wing_strip!(
 	acft::Aircraft{Fg},
@@ -599,7 +606,8 @@ function add_wing_strip!(
 	EIy::Fg = Fmax,
 	EIz::Fg = Fmax,
 	GJ::Fg = Fmax,
-	Ixx::Fg = 1e-3
+	Ixx::Fg = 1e-3,
+	g::Fg = 1e-2
 ) where Fg
 
 	_afl = Airfoil{Fg}(
@@ -622,7 +630,8 @@ function add_wing_strip!(
 		EA = EA,
 		EIy = EIy,
 		EIz = EIz,
-		GJ = GJ
+		GJ = GJ,
+		g = g
 	)
 
 	sect = WingStrip{Fg}(
@@ -657,7 +666,8 @@ end
 		EIz::Fg = Fmax,
 		GJ::Fg = Fmax,
 		Ixx::Fg = 1e-3,
-		Cf::Fg = 0.0
+		Cf::Fg = 0.0,
+		g::Fg = 1e-2
 	) where Fg
 ```
 
@@ -679,6 +689,7 @@ the `ŷ` axis
 * `GJ`: torsional resistance
 * `Ixx`: inertia of the fuselage section around its axis (per unit length)
 * `Cf`: friction coefficient
+* `g`: damping coefficient for associated beam element
 """
 function add_fuselage_cut!(
 	acft::Aircraft{Fg},
@@ -693,7 +704,8 @@ function add_fuselage_cut!(
 	EIz::Fg = Fmax,
 	GJ::Fg = Fmax,
 	Ixx::Fg = 1e-3,
-	Cf::Fg = 0.0
+	Cf::Fg = 0.0,
+	g::Fg = 1e-2
 ) where Fg
 
 	b = add_beam!(
@@ -706,7 +718,8 @@ function add_fuselage_cut!(
 		EIy = EIy,
 		EIz = EIz,
 		GJ = GJ,
-		Ixx = Ixx
+		Ixx = Ixx,
+		g = g
 	)
 
 	L = norm(acft.points[:, ipt1] .- acft.points[:, ipt2])

@@ -153,6 +153,7 @@ function get_elastic_matrix(
 			x,
 			1.0;
 			aerodynamic_forces = false,
+			structural_damping = false,
 			fixed_points = fixed_points
 		)
 
