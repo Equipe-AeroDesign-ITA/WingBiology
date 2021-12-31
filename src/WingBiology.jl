@@ -20,6 +20,13 @@ module WingBiology
 
     include("StateSpace.jl")
     include("Newton.jl")
+
+    _linv_reg(A::AbstractMatrix, λ::Real = 1e-3) = let D = A' * A
+        inv(
+            D .+ Matrix{Float64}(I * λ, size(D)...)
+        ) * A'
+    end
+
     include("Arnoldi.jl")
     include("AssumedModes.jl")
 

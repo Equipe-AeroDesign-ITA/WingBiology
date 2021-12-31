@@ -145,7 +145,7 @@ function Arnoldi_solve!(
 
     eig = let M = (A - D), K = JV
         eigen(
-            M \ K
+            _linv_reg(M) * K
         )
     end
 

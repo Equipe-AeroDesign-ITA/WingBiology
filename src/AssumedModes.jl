@@ -194,7 +194,7 @@ function assumed_modes_solve(
         A
     ), K = JV
         eigen(
-            M \ K
+            _linv_reg(M) * K
         )
     end
 

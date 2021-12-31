@@ -23,7 +23,7 @@ incidence = 8.0
 twist = -5.0
 sweep = 20.0
 
-R_tube = 15e-3
+R_tube = 14e-3
 t_tube = 3e-3
 
 # root and tip structural properties
@@ -92,6 +92,18 @@ A, eig = Arnoldi_solve!(acft, q, U∞; fixed_points = fixed_points)
 
 plot_aircraft(acft, q)
 qd, fcon = state_space(acft, q, U∞; fixed_points = fixed_points)
+
+#=
+@info "Obtaining assumed modes from structural matrices"
+
+ϕ, ωs = get_eigenmodes(acft; fixed_points = fixed_points)
+
+for (i, ω) in enumerate(ωs)
+    @show i, ω
+
+    plot_aircraft(acft, ϕ[:, i] .+ q0)
+end
+=#
 
 # I haven't yet corrected the flutter prediction feature!
 
