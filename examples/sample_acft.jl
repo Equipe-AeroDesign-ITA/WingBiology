@@ -23,8 +23,8 @@ incidence = 8.0
 twist = -5.0
 sweep = 20.0
 
-R_tube = 10e-3
-t_tube = 2e-3
+R_tube = 15e-3
+t_tube = 3e-3
 
 # root and tip structural properties
 EAt, EIt, GJt, mt, Ixxt, mxt = structural_tube(
@@ -81,7 +81,7 @@ interpolate!(acft, 20, s2, s3) # discretize with 20 strips
 
 fixed_points = [interp_points[end]]
 
-U∞ = 10.0
+U∞ = 25.0
 
 q = get_state(acft, U∞)
 q0 = copy(q)
@@ -125,3 +125,7 @@ for (i, λ) in enumerate(eig.values)
     end
 end
 =#
+
+@info "Calculating masses and inertias"
+
+@show get_massic_properties(acft)
