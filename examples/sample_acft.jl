@@ -23,7 +23,7 @@ incidence = 8.0
 twist = -5.0
 sweep = 20.0
 
-R_tube = 14e-3
+R_tube = 15e-3
 t_tube = 3e-3
 
 # root and tip structural properties

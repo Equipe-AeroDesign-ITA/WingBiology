@@ -138,9 +138,11 @@ function assumed_modes_solve(
     for i = 1:n_eig
         A[:, i] .= ϕ[:, i]
 
+        #=
         for j = 1:(i-1)
             A[:, i] .-= (A[:, i] ⋅ A[:, j]) .* A[:, j]
         end
+        =#
 
         A[:, i] ./= norm(A[:, i])
 
@@ -156,9 +158,11 @@ function assumed_modes_solve(
             A[1:(ndofs(acft) ÷ 2), i]
         ]
 
+        #=
         for j = 1:size(A, 2)
             v .-= (v ⋅ A[:, j]) .* A[:, j]
         end
+        =#
 
         v ./= norm(v)
 
