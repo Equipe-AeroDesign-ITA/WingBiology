@@ -26,9 +26,9 @@
 	set_u(q, 2, 2.0)
 
 	m = acft.masses[2].m
-	qd, _ = state_space(acft, q, 0.0)
+	qd, _ = state_space(acft, q, 0.0; structural_damping = false, aerodynamic_forces = false)
 	
-	@assert get_̇u(qd, 2) == - 1e3
+	@assert get_̇u(qd, 2) ≈ - 1e3
 
 	true
 end
