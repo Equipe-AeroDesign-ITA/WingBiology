@@ -21,24 +21,26 @@ cr = 0.5
 ct = 0.25
 incidence = 8.0
 twist = -5.0
-sweep = 20.0
+sweep = 0.0
 
-R_tube = 15e-3
-t_tube = 3e-3
+R_tube = 10e-3
+t_tube = 2e-3
+t_skin = 1e-3
+e = -0.05
 
 # root and tip structural properties
 EAt, EIt, GJt, mt, Ixxt, mxt = structural_tube(
-    R_tube, R_tube + t_tube, ct
+    R_tube, R_tube + t_tube, ct; e = e
 ) .+ structural_skin(
     tip_afl_Arel,
-    3e-3,
+    t_skin,
     ct
 )
 EAr, EIr, GJr, mr, Ixxr, mxr = structural_tube(
-    R_tube, R_tube + t_tube, cr
+    R_tube, R_tube + t_tube, cr; e = e
 ) .+ structural_skin(
     root_afl_Arel,
-    3e-3,
+    t_skin,
     cr
 )
 
@@ -50,7 +52,7 @@ s1 = WingSectInfo(
     m = mt, # local mass per unit span
     xCG = mxt / mt, # chord perc. of CG from quarter chord
     Ixx = Ixxt, # inertia for rotation around the wing axis
-    e = mxt / mt, # distance from quarter chord to elastic axis. I didn't calculate this, but you get the idea
+    e = e, # distance from quarter chord to elastic axis. I didn't calculate this, but you get the idea
     incidence = incidence + twist
 )
 s2 = WingSectInfo(
@@ -61,7 +63,7 @@ s2 = WingSectInfo(
     m = mr,
     xCG = mxr / mr,
     Ixx = Ixxr,
-    e = mxr / mr,
+    e = e,
     incidence = incidence
 )
 s3 = WingSectInfo(
@@ -72,7 +74,7 @@ s3 = WingSectInfo(
     m = mt,
     xCG = mxt / mt,
     Ixx = Ixxt,
-    e = mxt / mt,
+    e = e,
     incidence = incidence + twist
 )
 
@@ -93,10 +95,11 @@ A, eig = Arnoldi_solve!(acft, q, U∞; fixed_points = fixed_points)
 plot_aircraft(acft, q)
 qd, fcon = state_space(acft, q, U∞; fixed_points = fixed_points)
 
+n_eig = 6
+
 #=
 @info "Obtaining assumed modes from structural matrices"
-
-ϕ, ωs = get_eigenmodes(acft; fixed_points = fixed_points)
+ϕ, ωs = get_eigenmodes(acft, n_eig; fixed_points = fixed_points)
 
 for (i, ω) in enumerate(ωs)
     @show i, ω
@@ -110,10 +113,21 @@ end
 @info "Using assumed modes method to deduce assumed mode eigenvalues"
 @warn "The flutter prediction feature is as of yet untested"
 
-A, eig = assumed_modes_solve(acft, q, U∞; fixed_points = fixed_points, n_eig = 10)
+A, eig = assumed_modes_solve(
+    acft, q, U∞; 
+    fixed_points = fixed_points, n_eig = n_eig, structural_damping = true, transient_aerodynamics = false
+)
 for (i, λ) in enumerate(eig.λ)
     @show i, λ
 end
+
+#=
+@show get_̇w(A[:, 3])
+@show get_̇w(eig.JA[:, 3])
+@show get_̇θy(A[:, 3])
+@show get_̇θy(eig.JA[:, 3])
+@show get_̇u(A[:, 3]) ⋅ get_̇u(eig.JA[:, 3]), get_̇v(A[:, 3]) ⋅ get_̇v(eig.JA[:, 3]), get_̇w(A[:, 3]) ⋅ get_̇w(eig.JA[:, 3]), get_̇θx(A[:, 3]) ⋅ get_̇θx(eig.JA[:, 3]), get_̇θy(A[:, 3]) ⋅ get_̇θy(eig.JA[:, 3])
+=#
 
 writedlm("eig_basis.dat", [q0 real.(A) imag.(A)])
 
