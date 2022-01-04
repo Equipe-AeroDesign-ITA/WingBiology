@@ -1,7 +1,7 @@
 @assert begin
     acft = Aircraft()
 
-    U∞ = 2.0
+    U∞ = 100.0
     ρ = 1.2
 
     b = 2.0
@@ -12,6 +12,8 @@
 
     θc = 1e-2
     hc = 1e-2
+    θdc = 1.0
+    hdc = 2.0
 
     EI = 1e4
     GJ = 1e4
@@ -57,8 +59,10 @@
 
     set_θy(q, 2, θc)
     set_w(q, 2, hc)
+    set_̇θy(q, 2, θdc)
+    set_̇w(q, 2, hdc)
 
-    qd, fcon = state_space(acft, q, U∞; ρ = ρ)
+    qd, fcon = state_space(acft, q, U∞; ρ = ρ, structural_damping = false)
 
     α_AC = get_̇θy(qd, 2)
     a_AC = get_̇w(qd, 2)
@@ -78,8 +82,9 @@
 
     S = b * c / 2
 
-    Laed = ((fcon.sectional.CL[1] + fcon.sectional.CL[2]) / 2) * S * ρ * U∞ ^ 2 / 2
-    Maed = ((fcon.sectional.Cm[1] + fcon.sectional.Cm[2]) / 2) * S * c * ρ * U∞ ^ 2 / 2
+    pdyn = ρ * (U∞ ^ 2 + hdc ^ 2) / 2
+    Laed = ((fcon.sectional.CL[1] + fcon.sectional.CL[2]) / 2) * S * pdyn
+    Maed = ((fcon.sectional.Cm[1] + fcon.sectional.Cm[2]) / 2) * S * pdyn
 
     h_e = - c * e * θc + hc
 
@@ -93,8 +98,8 @@
     α_CG = M_CG / Ixx
 
     # Gotta make these values match!
-    @assert a_CG ≈ a_CG_num 
-    @assert α_CG ≈ α_CG_num 
+    @assert isapprox(a_CG, a_CG_num; rtol = 1e-3)
+    @assert isapprox(α_CG, α_CG_num; rtol = 1e-3) 
 
     # plot_aircraft(acft, q)
 
