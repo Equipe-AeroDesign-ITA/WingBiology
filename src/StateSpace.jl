@@ -1183,6 +1183,7 @@ function state_space(
 
 	qd = similar(f)
 
+	ident = Matrix{Float64}(1e-5 * I, 3, 3)
 	for (im, mass) in enumerate(acft.masses)
 		finds = (6 * (im - 1) + 1):(6 * (im - 1) + 3)
 		minds = (6 * (im - 1) + 4):(6 * im)
@@ -1202,8 +1203,8 @@ function state_space(
 			f[finds] .- 
 			mass.m .* cross(ω, cross(ω, rp)) .- 
 			(2 * mass.m) .* cross(ω, vp)
-		) ./ mass.m
-		qd[minds] .= inv(mass.I) * f[minds]
+		) ./ (mass.m + 1e-5)
+		qd[minds] .= inv(mass.I .+ ident) * f[minds]
 	end
 
 	qdot = [

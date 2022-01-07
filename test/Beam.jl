@@ -28,7 +28,7 @@
 	m = acft.masses[2].m
 	qd, _ = state_space(acft, q, 0.0; structural_damping = false, aerodynamic_forces = false)
 	
-	@assert get_̇u(qd, 2) ≈ - 1e3
+	@assert isapprox(get_̇u(qd, 2), - 1e3; rtol = 1e-3)
 
 	true
 end
