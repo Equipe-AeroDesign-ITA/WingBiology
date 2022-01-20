@@ -835,6 +835,34 @@ function state_space(
 	aerodynamic_forces::Bool = true
 ) where {Fg, Fi <: Int}
 
+	linds = [
+		wsect.ipt1 for wsect in acft.wing_strips
+	]
+	rinds = [
+		wsect.ipt2 for wsect in acft.wing_strips
+	]
+
+	cleft, cright = let cavg = _wstrip_interp(acft, :c)
+		(cavg[linds], cavg[rinds])
+	end
+	eleft, eright = let eavg = _wstrip_interp(acft, :e)
+		(eavg[linds], eavg[rinds])
+	end
+	xCGleft, xCGright = let xavg = _wstrip_interp(acft, :xCG)
+		(xavg[linds], xavg[rinds])
+	end
+
+	dp_l, dp_r = let app_pts = (
+		acft.points[:, linds] .+ acft.points[:, rinds]
+	) ./ 2
+		(
+			acft.points[:, linds] .- app_pts,
+			acft.points[:, rinds] .- app_pts
+		)
+	end
+	dp_l[2:3, :] .= 0.0
+	dp_r[2:3, :] .= 0.0
+
 	xhat = [
 		1.0, 0.0, 0.0
 	]
@@ -943,28 +971,38 @@ function state_space(
 	f = zeros(Real, length(x) ÷ 2)
 
 	if aerodynamic_forces
-		for (strip, F, M) in zip(acft.wing_strips, Fs, Ms)
+		for (i, (strip, F, M, cl, cr, xCGl, xCGr)) in enumerate(
+			zip(
+				acft.wing_strips, Fs, Ms, cleft, cright, xCGleft, xCGright
+			)
+		)
 			f1inds = (6 * (strip.ipt1 - 1) + 1):(6 * (strip.ipt1 - 1) + 3)
 			f2inds = (6 * (strip.ipt2 - 1) + 1):(6 * (strip.ipt2 - 1) + 3)
 
 			m1inds = (6 * (strip.ipt1 - 1) + 4):(6 * strip.ipt1)
 			m2inds = (6 * (strip.ipt2 - 1) + 4):(6 * strip.ipt2)
 
+			dcg_l = dp_l[:, i] .+ [cl * xCGl, 0.0, 0.0]
+			dcg_r = dp_r[:, i] .+ [cr * xCGr, 0.0, 0.0]
+
 			Ft = F ./ 2
-			Mt = cross(
+			Mt_l = M ./ 2 .+ cross(
 				Ft,
-				[strip.c * strip.xCG, 0.0, 0.0]
-			) .+ M ./ 2
+				dcg_l
+			)
+			Mt_r = M ./ 2 .+ cross(
+				Ft,
+				dcg_r
+			)
 
 			m_sect = (acft.masses[strip.ipt1] + acft.masses[strip.ipt2]) / 2
 			inv_inertia = inv(m_sect.I) .* m_sect.m
-			df = [strip.xCG * strip.c, 0.0, 0.0] × (inv_inertia * Mt)
 
-			f[f1inds] .+= Ft .+ df
-			f[f2inds] .+= Ft .+ df
+			f[f1inds] .+= Ft .+ dcg_l × (inv_inertia * Mt_l)
+			f[f2inds] .+= Ft .+ dcg_r × (inv_inertia * Mt_r)
 
-			f[m1inds] .+= Mt
-			f[m2inds] .+= Mt
+			f[m1inds] .+= Mt_l
+			f[m2inds] .+= Mt_r
 		end
 
 		for (cut, F) in zip(acft.fuselage_cuts, fFs)
@@ -994,7 +1032,9 @@ function state_space(
 		- r
 	]
 
-	for sect in acft.wing_strips
+	for (sect, cl, cr, xCGl, xCGr, el, er) in zip(
+		acft.wing_strips, cleft, cright, xCGleft, xCGright, eleft, eright
+	)
 		is_calculated[sect.ibeam] = true
 
 		g = acft.beams[sect.ibeam].g * structural_damping
@@ -1047,11 +1087,11 @@ function state_space(
 
 		x1 .+= cross(
 			θ1,
-			[sect.c * sect.e, 0.0, 0.0]
+			[cl * el, 0.0, 0.0]
 		)
 		x2 .+= cross(
 			θ2,
-			[sect.c * sect.e, 0.0, 0.0]
+			[cr * er, 0.0, 0.0]
 		)
 
 		b = acft.beams[sect.ibeam]
@@ -1076,16 +1116,16 @@ function state_space(
 
 		fb = b.Mtouni * pl[1:3]
 		mb = cross(
-			fb, [sect.c * (sect.xCG - sect.e), 0.0, 0.0]
+			fb, [cl * (xCGl - el), 0.0, 0.0]
 		) .+ b.Mtouni * pl[4:6]
-		f[f1inds] .+= fb .+ [sect.c * sect.xCG, 0.0, 0.0] × (inv_inertia * mb)
+		f[f1inds] .+= fb .+ [cl * xCGl, 0.0, 0.0] × (inv_inertia * mb)
 		f[m1inds] .+= mb
 
 		fb .= b.Mtouni * pl[7:9]
 		mb .= cross(
-			fb, [sect.c * (sect.xCG - sect.e), 0.0, 0.0]
+			fb, [cr * (xCGr - er), 0.0, 0.0]
 		) .+ b.Mtouni * pl[10:12]
-		f[f2inds] .+= fb .+ [sect.c * sect.xCG, 0.0, 0.0] × (inv_inertia * mb)
+		f[f2inds] .+= fb .+ [cr * xCGr, 0.0, 0.0] × (inv_inertia * mb)
 		f[m2inds] .+= mb
 	end
 

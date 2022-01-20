@@ -21,7 +21,7 @@ cr = 0.5
 ct = 0.25
 incidence = 8.0
 twist = -5.0
-sweep = 0.0
+sweep = 15.0
 
 R_tube = 10e-3
 t_tube = 2e-3

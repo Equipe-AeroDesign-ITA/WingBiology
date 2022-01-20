@@ -1399,3 +1399,32 @@ interpolate!(
 	kwargs1 = s1.kwargs,
 	kwargs2 = s2.kwargs
 )
+
+"""
+Interpolate property between adjacent wing sections so as to obtain 
+values at nodes
+"""
+function _wstrip_interp(
+	acft::Aircraft{Fg},
+	prop::Symbol
+) where Fg
+
+	cnt = zeros(Fg, size(acft.points, 2))
+	v = zeros(Fg, size(acft.points, 2))
+
+	for wstrip in acft.wing_strips
+		p = getproperty(wstrip, prop)
+		L = wstrip.L
+
+		w = 1.0 / (L + 1e-10)
+
+		cnt[wstrip.ipt1] += w
+		v[wstrip.ipt1] += p * w
+
+		cnt[wstrip.ipt2] += w
+		v[wstrip.ipt2] += p * w
+	end
+
+	@. v / (cnt + 1e-10)
+
+end
