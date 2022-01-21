@@ -192,14 +192,17 @@ function assumed_modes_solve(
     )
     =#
 
-    eig = let M = (
-        transient_aerodynamics ?
-        (A - D) :
-        A
-    ), K = JV
-        eigen(
-            _linv_reg(M) * K
-        )
+    Ainv = _linv_reg(A)
+
+    eig = let (M1, M2) = (
+        (
+            transient_aerodynamics ?
+            Matrix{Fg}(I, size(Ainv, 1), size(Ainv, 1)) .- Ainv * D : 
+            Matrix{Fg}(I, size(Ainv, 1), size(Ainv, 1))
+        ),
+        Ainv * JV
+    )
+        eigen(M2, M1)
     end
 
     A, (

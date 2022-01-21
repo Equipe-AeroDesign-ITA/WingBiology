@@ -143,10 +143,17 @@ function Arnoldi_solve!(
         ]...
     )
 
-    eig = let M = (A - D), K = JV
-        eigen(
-            _linv_reg(M) * K
-        )
+    Ainv = _linv_reg(A)
+
+    eig = let (M1, M2) = (
+        (
+            add_non_stationary ?
+            Matrix{Fg}(I, size(Ainv, 1), size(Ainv, 1)) .- Ainv * D : 
+            Matrix{Fg}(I, size(Ainv, 1), size(Ainv, 1))
+        ),
+        Ainv * JV
+    )
+        eigen(M2, M1)
     end
 
     x .-= A * (JV \ r)

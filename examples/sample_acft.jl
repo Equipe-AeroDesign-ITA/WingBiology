@@ -115,7 +115,7 @@ end
 
 A, eig = assumed_modes_solve(
     acft, q, U∞; 
-    fixed_points = fixed_points, n_eig = n_eig, structural_damping = true, transient_aerodynamics = false
+    fixed_points = fixed_points, n_eig = n_eig, structural_damping = true, transient_aerodynamics = true
 )
 for (i, λ) in enumerate(eig.λ)
     @show i, λ
