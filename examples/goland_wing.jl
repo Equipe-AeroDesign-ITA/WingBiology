@@ -12,11 +12,11 @@ Ixx = 8.64
 GJ = 0.99e6
 EIxx = 9.77e6
 
-U∞ = 165.0
+U∞ = 210.0
 ρ = 1.020
 α = 0.05
 
-g = 8e-3
+g = 1e-2
 
 acft = Aircraft()
 
@@ -67,7 +67,7 @@ Arnoldi_solve!(acft, q, U∞; α = α, fixed_points = fixed_points, ρ = ρ)
 
 plot_aircraft(acft, q)
 
-A, info = assumed_modes_solve(acft, q, U∞; ρ = ρ, α = α, fixed_points = fixed_points)
+A, info = assumed_modes_solve(acft, q, U∞; ρ = ρ, α = α, fixed_points = fixed_points, n_eig = 8)
 
 λs = info.λ
 
