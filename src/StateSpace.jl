@@ -896,15 +896,17 @@ function state_space(
 				get_w(x, pmass.ipt)
 			]
 
+			ϵ = sqrt(pmass.A / π) / 4
+
 			for (u, colpt) in zip(us, cols)
 				u .+= σ_point[ipt] .* point_source_infl(
-					colpt, pt
+					colpt, pt, ϵ
 				)
 				u .+= begin
 					nμ = norm(μ_point[ipt])
 					ξ = μ_point[ipt] ./ (nμ + 1e-10)
 
-					nμ .* point_doublet_infl(colpt, pt, ξ)
+					nμ .* point_doublet_infl(colpt, pt, ξ, ϵ)
 				end
 			end
 		end
@@ -921,16 +923,19 @@ function state_space(
 				get_w(x, sect.ipt2)
 			]
 
+			A = (sect.A1 + sect.A2) / 2
+			ϵ = sqrt(A / π) / 2
+
 			for (u, colpt) in zip(us, cols)
 				u .+= σ[ifus] .* source_line(
-					colpt, pt1, pt2
+					colpt, pt1, pt2, ϵ
 				)
 				u .+= begin
 					nμ = norm(μ[ifus])
 					η = μ[ifus] ./ (nμ + 1e-10)
 
 					nμ .* doublet_line(
-						colpt, pt1, pt2, η
+						colpt, pt1, pt2, η, ϵ
 					)
 				end
 			end
