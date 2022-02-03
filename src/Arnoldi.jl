@@ -2,16 +2,17 @@ export Arnoldi_solve!, backward_Euler
 
 """
 ```
-	function Arnoldi_solve!(
-		acft::Aircraft{Fg},
-		x::AbstractVector,
-		U∞::Fg;
-		n_Krylov::Int64 = 6,
-		first_vector::Union{AbstractVector, Nothing} = nothing,
-		preconditioner::Union{LU, Nothing} = nothing,
-        rtol::Real = 1e-2,
-		kwargs...
-	) where Fg
+    function Arnoldi_solve!(
+        acft::Aircraft{Fg},
+        x::AbstractVector,
+        U∞::Fg;
+        n_Krylov::Int64 = 6,
+        first_vector::Union{AbstractVector,Nothing} = nothing,
+        preconditioner::Union{LU,Nothing} = nothing,
+        add_non_stationary::Bool = false,
+        warning_tol::Real = Inf,
+        kwargs...
+    ) where {Fg}
 ```
 
 Solve aircraft aerostructural problem using Krylov subspace,
@@ -30,6 +31,8 @@ Proper Orthogonal Decomposition method
     to time and add them to the considered base. Necessary if the preconditioner 
     favors a stationary solution - as is the case with the default
     structural preconditioner - if a transient solution is desired
+* `warning_tol`: relative tolerance for residual reduction above which a warning
+    will be issued
 * `kwargs`: keyword arguments for `state_space`
 """
 function Arnoldi_solve!(
@@ -40,6 +43,7 @@ function Arnoldi_solve!(
     first_vector::Union{AbstractVector,Nothing} = nothing,
     preconditioner::Union{LU,Nothing} = nothing,
     add_non_stationary::Bool = false,
+    warning_tol::Real = Inf,
     kwargs...
 ) where {Fg}
 
@@ -156,7 +160,13 @@ function Arnoldi_solve!(
         eigen(M2, M1)
     end
 
-    x .-= A * (JV \ r)
+    let dα = - (JV \ r)
+        x .+= A * dα
+
+        if norm(r .+ JV * dα) > warning_tol * norm(r)
+            @warn "WingBiology: desired tolerance not reached with Arnoldi method"
+        end
+    end
 
     A, (
         ϕ = eig.vectors,
