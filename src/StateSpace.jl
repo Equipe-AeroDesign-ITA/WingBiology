@@ -1283,6 +1283,93 @@ function state_space(
 		set_̇θz(qdot, f, (ω[3] - get_̇θz(x, f)) * amp)
 	end
 
+	for lnk in acft.links
+		i1 = lnk.i1
+		i2 = lnk.i2
+
+		p1 = acft.points[:, i1]
+		p2 = (
+			i2 == 0 ?
+			p1 :
+			acft.points[:, i2]
+		)
+
+		θ = [
+			get_θx(x, i1),
+			get_θy(x, i1),
+			get_θz(x, i1)
+		]
+
+		dl = [
+			get_u(x, i1),
+			get_v(x, i1),
+			get_w(x, i1)
+		]
+		if i2 != 0
+			dl .-= [
+				get_u(x, i2),
+				get_v(x, i2),
+				get_w(x, i2)
+			]
+		end
+
+		dθ = copy(θ)
+		if i2 != 0
+			dθ .-= [
+				get_θx(x, i2),
+				get_θy(x, i2),
+				get_θz(x, i2)
+			]
+		end
+
+		dp = (p2 .- p1)
+
+		qdot[
+			(6 * (i1 - 1) + 1):(6 * i1)
+		] .= [
+			dl .+ θ × dp .+ dp;
+			dθ
+		]
+
+		# velocities
+		θ = [
+			get_̇θx(x, i1),
+			get_̇θy(x, i1),
+			get_̇θz(x, i1)
+		]
+
+		dl = [
+			get_̇u(x, i1),
+			get_̇v(x, i1),
+			get_̇w(x, i1)
+		]
+		if i2 != 0
+			dl .-= [
+				get_̇u(x, i2),
+				get_̇v(x, i2),
+				get_̇w(x, i2)
+			]
+		end
+
+		dθ = copy(θ)
+		if i2 != 0
+			dθ .-= [
+				get_̇θx(x, i2),
+				get_̇θy(x, i2),
+				get_̇θz(x, i2)
+			]
+		end
+
+		let Ndof2 = ndofs(acft) ÷ 2
+			qdot[
+				(6 * (i1 - 1) + 1 + Ndof2):(6 * i1 + Ndof2)
+			] .= [
+				dl .+ θ × dp;
+				dθ
+			]
+		end
+	end
+
 	F = zeros(Fg, 3)
 	M = zeros(Fg, 3)
 	if length(acft.wing_strips) > 0

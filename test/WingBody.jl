@@ -79,7 +79,7 @@ using ForwardDiff
 		)
 	end
 
-	add_beam!(
+	add_link!(
 		acft,
 		NW ÷ 2 + 1,
 		NW + 2 * (NM - 1) + NF ÷ 2 + 1

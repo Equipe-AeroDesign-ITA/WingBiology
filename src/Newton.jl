@@ -196,6 +196,32 @@ function get_elastic_matrix(
 		n_elements += 12
 	end
 
+	for lnk in acft.links
+		for i = (6 * (lnk.i1 - 1) + 1):(6 * lnk.i1)
+			for j = (6 * (lnk.i1 - 1) + 1):(6 * lnk.i1)
+				n_elements += 1
+			end
+
+			if lnk.i2 != 0
+				for j = (6 * (lnk.i2 - 1) + 1):(6 * lnk.i2)
+					n_elements += 1
+				end
+			end
+		end
+
+		for i = (6 * (lnk.i1 - 1) + 1 + HD):(6 * lnk.i1 + HD)
+			for j = (6 * (lnk.i1 - 1) + 1 + HD):(6 * lnk.i1 + HD)
+				n_elements += 1
+			end
+
+			if lnk.i2 != 0
+				for j = (6 * (lnk.i2 - 1) + 1 + HD):(6 * lnk.i2 + HD)
+					n_elements += 1
+				end
+			end
+		end
+	end
+
 	data = ones(Fg, n_elements)
 	n_rows = Vector{Int64}(undef, n_elements)
 	n_cols = Vector{Int64}(undef, n_elements)
@@ -254,6 +280,44 @@ function get_elastic_matrix(
 
 			n_rows[n_elements] = i + HD
 			n_cols[n_elements] = i + HD
+		end
+	end
+
+	for lnk in acft.links
+		for i = (6 * (lnk.i1 - 1) + 1):(6 * lnk.i1)
+			for j = (6 * (lnk.i1 - 1) + 1):(6 * lnk.i1)
+				n_elements += 1
+
+				n_rows[n_elements] = i
+				n_cols[n_elements] = j
+			end
+
+			if lnk.i2 != 0
+				for j = (6 * (lnk.i2 - 1) + 1):(6 * lnk.i2)
+					n_elements += 1
+
+					n_rows[n_elements] = i
+					n_cols[n_elements] = j
+				end
+			end
+		end
+
+		for i = (6 * (lnk.i1 - 1) + 1 + HD):(6 * lnk.i1 + HD)
+			for j = (6 * (lnk.i1 - 1) + 1 + HD):(6 * lnk.i1 + HD)
+				n_elements += 1
+
+				n_rows[n_elements] = i
+				n_cols[n_elements] = j
+			end
+
+			if lnk.i2 != 0
+				for j = (6 * (lnk.i2 - 1) + 1 + HD):(6 * lnk.i2 + HD)
+					n_elements += 1
+
+					n_rows[n_elements] = i
+					n_cols[n_elements] = j
+				end
+			end
 		end
 	end
 

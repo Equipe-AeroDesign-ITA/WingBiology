@@ -167,6 +167,17 @@ function plot_aircraft(acft::Aircraft{Fg}, q::Union{AbstractVector, Nothing} = n
 		end
 	end
 
+	for lnk in acft.links
+		if lnk.i2 != 0
+			ax.plot(
+				[points[1, lnk.i1], points[1, lnk.i2]],
+				[points[2, lnk.i1], points[2, lnk.i2]],
+				[points[3, lnk.i1], points[3, lnk.i2]];
+				color = "g"
+			)
+		end
+	end
+
 	_plt.show()
 
 end

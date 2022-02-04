@@ -1,5 +1,5 @@
-export WingStrip, FuselageCut, LumpedMass, Beam, Aircraft, Airfoil, PointDrag, 
-	add_beam!, add_mass!, add_wing_strip!, add_point_drag!, add_fuselage_cut!, flat_plate,
+export WingStrip, RigidLink, FuselageCut, LumpedMass, Beam, Aircraft, Airfoil, PointDrag, 
+	add_beam!, add_link!, add_mass!, add_wing_strip!, add_point_drag!, add_fuselage_cut!, flat_plate,
 	Engine, add_engine!, add_point!, interpolate_wing!, interpolate_fuselage!,
 	plain_flap, slotted_flap, slat, fixed_slat, Kruger_slat,
 	get_massic_properties,
@@ -265,6 +265,20 @@ struct Engine{Fg <: Real}
 end
 
 """
+Struct to designate a perfectly rigid link 
+between two points
+"""
+struct RigidLink
+	i1::Int64
+	i2::Int64
+
+	RigidLink(
+		i1::Int,
+		i2::Int = 0
+	) = new(i1, i2)
+end
+
+"""
 ```
 	mutable struct Aircraft{Fg <: Real}
 		points::Matrix{Fg}
@@ -274,6 +288,7 @@ end
 		engines::Vector{Engine{Fg}}
 		beams::Vector{Beam{Fg}}
 		masses::Vector{LumpedMass{Fg}}
+		links::Vector{RigidLink}
 	end
 ```
 
@@ -287,6 +302,7 @@ mutable struct Aircraft{Fg <: Real}
 	engines::Vector{Engine{Fg}}
 	beams::Vector{Beam{Fg}}
 	masses::Vector{LumpedMass{Fg}}
+	links::Vector{RigidLink}
 end
 
 """
@@ -309,7 +325,8 @@ Aircraft{Fg}(points::Matrix{Fg}) where Fg = Aircraft{Fg}(
 			0.0,
 			zeros(Fg, 3, 3)
 		) for i = 1:size(points, 2)
-	]
+	],
+	RigidLink[]
 )
 Aircraft(points::Matrix{Fg}) where {Fg <: Real} = Aircraft{Fg}(points)
 """
@@ -366,6 +383,23 @@ function add_mass!(
 	)
 
 end
+
+"""
+```
+	add_link!(
+		acft::Aircraft{Fg},
+		i1::Int,
+		i2::Int = 0
+	) where Fg = push!(acft.links, RigidLink(i1, i2))
+```
+
+Add rigid link to an aircraft struct
+"""
+add_link!(
+	acft::Aircraft{Fg},
+	i1::Int,
+	i2::Int = 0
+) where Fg = push!(acft.links, RigidLink(i1, i2))
 
 """
 ```
