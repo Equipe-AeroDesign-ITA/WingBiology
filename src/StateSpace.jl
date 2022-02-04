@@ -1252,6 +1252,16 @@ function state_space(
 		qd[minds] .= inv(mass.I .+ ident) * f[minds]
 	end
 
+	amp = amplification_factor
+	for f in fixed_points
+		inds = (6 * (f - 1) + 1):(6 * f)
+		vinds = inds .+ 1
+
+		qd[inds] .= let (dx, dv) = (x[inds], x[vinds])
+			- amp .* (dx .+ dv .* structural_damping)
+		end
+	end
+
 	qdot = [
 		begin
 			vs = x[(length(x) ÷ 2 + 1):end]
@@ -1265,23 +1275,6 @@ function state_space(
 		end;
 		qd
 	]
-
-	amp = amplification_factor
-	for f in fixed_points
-		set_u(qdot, f, (acft.points[1, f] - get_u(x, f)) * amp)
-		set_v(qdot, f, (acft.points[2, f] - get_v(x, f)) * amp)
-		set_w(qdot, f, (acft.points[3, f] - get_w(x, f)) * amp)
-		set_θx(qdot, f, - get_θx(x, f) * amp)
-		set_θy(qdot, f, - get_θy(x, f) * amp)
-		set_θz(qdot, f, - get_θz(x, f) * amp)
-
-		set_̇u(qdot, f, (V[1] - get_̇u(x, f)) * amp)
-		set_̇v(qdot, f, (V[2] - get_̇v(x, f)) * amp)
-		set_̇w(qdot, f, (V[3] - get_̇w(x, f)) * amp)
-		set_̇θx(qdot, f, (ω[1] - get_̇θx(x, f)) * amp)
-		set_̇θy(qdot, f, (ω[2] - get_̇θy(x, f)) * amp)
-		set_̇θz(qdot, f, (ω[3] - get_̇θz(x, f)) * amp)
-	end
 
 	for lnk in acft.links
 		i1 = lnk.i1
