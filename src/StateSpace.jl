@@ -1257,7 +1257,10 @@ function state_space(
 		inds = (6 * (f - 1) + 1):(6 * f)
 		vinds = inds .+ 1
 
-		qd[inds] .= let (dx, dv) = (x[inds], x[vinds])
+		x0 = [acft.points[:, f]; zeros(3)]
+		v0 = [V; ω]
+		
+		qd[inds] .= let (dx, dv) = (x[inds] .- x0, x[vinds] .- v0)
 			- amp .* (dx .+ dv .* structural_damping)
 		end
 	end
@@ -1268,7 +1271,10 @@ function state_space(
 				inds = (6 * (f - 1) + 1):(6 * f)
 				vinds = inds .+ 1
 
-				qd[inds] .= let (dx, dv) = (x[inds], x[vinds])
+				x0 = [acft.points[:, f]; zeros(3)]
+				v0 = [V; ω]
+
+				qd[inds] .= let (dx, dv) = (x[inds] .- x0, x[vinds] .- v0)
 					- amp .* (dx .+ dv .* structural_damping)
 				end
 			end
