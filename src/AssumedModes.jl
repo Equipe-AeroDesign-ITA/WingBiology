@@ -33,6 +33,7 @@ function get_eigenmodes(
 
     N = ndofs(aircraft) ÷ 2
     ϕ, ω = let A = MinvK[(N + 1):end, 1:N]
+        #=
         for f in fixed_points
             for idof = (6 * (f - 1) + 1):(6 * f)
                 A[idof, :] .= 0.0
@@ -40,6 +41,7 @@ function get_eigenmodes(
                 A[idof, idof] = - Fmax
             end
         end
+        =#
 
         dropzeros!(A)
 

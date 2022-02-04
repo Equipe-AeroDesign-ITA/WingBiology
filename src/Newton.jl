@@ -134,7 +134,8 @@ end
 	```
 	function get_elastic_matrix(
 		acft::Aircraft{Fg};
-		fixed_points::Vector{Int64} = Int64[]
+		fixed_points::Vector{Int64} = Int64[],
+		amplification_factor::Real = Fmax
 	) where Fg
 	```
 
@@ -142,7 +143,8 @@ Get matrix `inv(M) * K` in sparse format
 """
 function get_elastic_matrix(
 	acft::Aircraft{Fg};
-	fixed_points::Vector{Int64} = Int64[]
+	fixed_points::Vector{Int64} = Int64[],
+	amplification_factor::Real = Fmax
 ) where Fg
 
 	q = get_state(acft, 1.0)
@@ -154,7 +156,8 @@ function get_elastic_matrix(
 			1.0;
 			aerodynamic_forces = false,
 			structural_damping = false,
-			fixed_points = fixed_points
+			fixed_points = fixed_points,
+			amplification_factor = amplification_factor
 		)
 
 		y .= qd
