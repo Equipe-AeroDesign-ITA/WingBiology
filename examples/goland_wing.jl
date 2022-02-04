@@ -57,17 +57,15 @@ rs = WingSectInfo(
 lwing_pts, lwing_sects = interpolate!(acft, 30, ls, cs)
 rwing_pts, rwing_sects = interpolate!(acft, 30, cs, rs)
 
-fixed_points = [
-    rwing_pts[1]
-]
+add_link!(acft, rwing_pts[1])
 
 q = get_state(acft, U∞; α = α)
 
-Arnoldi_solve!(acft, q, U∞; α = α, fixed_points = fixed_points, ρ = ρ)
+Arnoldi_solve!(acft, q, U∞; α = α, ρ = ρ)
 
 plot_aircraft(acft, q)
 
-A, info = assumed_modes_solve(acft, q, U∞; ρ = ρ, α = α, fixed_points = fixed_points, n_eig = 8)
+A, info = assumed_modes_solve(acft, q, U∞; ρ = ρ, α = α, n_eig = 8)
 
 λs = info.λ
 

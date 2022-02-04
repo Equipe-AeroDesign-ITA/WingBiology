@@ -81,7 +81,7 @@ s3 = WingSectInfo(
 interp_points, interp_wing_strips = interpolate!(acft, 20, s1, s2) # discretize with 20 strips
 interpolate!(acft, 20, s2, s3) # discretize with 20 strips
 
-fixed_points = [interp_points[end]]
+add_link!(acft, interp_points[end])
 
 U∞ = 25.0
 
@@ -90,16 +90,16 @@ q0 = copy(q)
 
 @info "Using Arnoldi method to solve for static aerostructural solution"
 
-A, eig = Arnoldi_solve!(acft, q, U∞; fixed_points = fixed_points)
+A, eig = Arnoldi_solve!(acft, q, U∞)
 
 plot_aircraft(acft, q)
-qd, fcon = state_space(acft, q, U∞; fixed_points = fixed_points)
+qd, fcon = state_space(acft, q, U∞)
 
 n_eig = 6
 
 #=
 @info "Obtaining assumed modes from structural matrices"
-ϕ, ωs = get_eigenmodes(acft, n_eig; fixed_points = fixed_points)
+ϕ, ωs = get_eigenmodes(acft, n_eig)
 
 for (i, ω) in enumerate(ωs)
     @show i, ω
@@ -115,7 +115,7 @@ end
 
 A, eig = assumed_modes_solve(
     acft, q, U∞; 
-    fixed_points = fixed_points, n_eig = n_eig, structural_damping = true, transient_aerodynamics = true
+    n_eig = n_eig, structural_damping = true, transient_aerodynamics = true
 )
 for (i, λ) in enumerate(eig.λ)
     @show i, λ
@@ -135,7 +135,7 @@ writedlm("assumed_eigs.dat", [real.(eig.ϕ) imag.(eig.ϕ) real.(eig.λ) imag.(ei
 
 @info "Performing dynamic simulation"
 
-A, ts, qs = backward_Euler(acft, q0, U∞; fixed_points = fixed_points, transient_aerodynamics = true, dt = 1e-3, t = 0.2)
+A, ts, qs = backward_Euler(acft, q0, U∞; transient_aerodynamics = true, dt = 1e-3, t = 0.2)
 
 writedlm("Arnoldi_basis.dat", [q0 A])
 writedlm("results.dat", [ts qs'])
