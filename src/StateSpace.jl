@@ -1226,6 +1226,51 @@ function state_space(
 		]
 	end
 
+	amp = amplification_factor
+	Ndof2 = ndofs(acft) ÷ 2
+	for lnk in acft.links
+		if lnk.i2 != 0
+			inds1 = (6 * (lnk.i1 - 1) + 1):(6 * lnk.i1)
+			inds2 = (6 * (lnk.i2 - 1) + 1):(6 * lnk.i2)
+
+			vinds1 = inds1 .+ Ndof2
+			vinds2 = inds2 .+ Ndof2
+			
+			dp = acft.points[:, lnk.i2] .- acft.points[:, lnk.i1]
+
+			dx = x[inds2] .- x[inds1] .- [
+				dp;
+				zeros(3)
+			]
+			dv = x[vinds2] .- x[vinds1] .- [
+				ω × dp;
+				zeros(3)
+			]
+
+			m1 = acft.masses[lnk.i1]
+			m2 = acft.masses[lnk.i2]
+
+			kx = - amp * (
+				m1.m + m2.m
+			)
+			kθ = - amp * (
+				m1.I + m2.I
+			)
+
+			constraint_force = [
+				kx .* (
+					dx[1:3] .+ structural_damping .* dv[1:3]
+				);
+				kθ * (
+					dx[4:6] .+ structural_damping .* dv[4:6]
+				)
+			]
+
+			f[inds2] .+= constraint_force
+			f[inds1] .-= constraint_force
+		end
+	end
+
 	qd = similar(f)
 
 	ident = Matrix{Float64}(1e-5 * I, 3, 3)
@@ -1252,7 +1297,6 @@ function state_space(
 		qd[minds] .= inv(mass.I .+ ident) * f[minds]
 	end
 
-	amp = amplification_factor
 	for f in fixed_points
 		inds = (6 * (f - 1) + 1):(6 * f)
 		vinds = inds .+ 1
