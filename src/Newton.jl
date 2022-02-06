@@ -224,6 +224,14 @@ function get_elastic_matrix(
 
 		if lnk.i2 != 0
 			for i = (6 * (lnk.i2 - 1) + 1 + HD):(6 * lnk.i2 + HD)
+				for j = (6 * (lnk.i2 - 1) + 1):(6 * lnk.i2)
+					n_elements += 1
+				end
+
+				for j = (6 * (lnk.i2 - 1) + 1 + HD):(6 * lnk.i2 + HD)
+					n_elements += 1
+				end
+
 				for j = (6 * (lnk.i1 - 1) + 1):(6 * lnk.i1)
 					n_elements += 1
 				end
@@ -333,6 +341,20 @@ function get_elastic_matrix(
 
 		if lnk.i2 != 0
 			for i = (6 * (lnk.i2 - 1) + 1 + HD):(6 * lnk.i2 + HD)
+				for j = (6 * (lnk.i2 - 1) + 1):(6 * lnk.i2)
+					n_elements += 1
+
+					n_rows[n_elements] = i
+					n_cols[n_elements] = j
+				end
+
+				for j = (6 * (lnk.i2 - 1) + 1 + HD):(6 * lnk.i2 + HD)
+					n_elements += 1
+
+					n_rows[n_elements] = i
+					n_cols[n_elements] = j
+				end
+
 				for j = (6 * (lnk.i1 - 1) + 1):(6 * lnk.i1)
 					n_elements += 1
 

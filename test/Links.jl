@@ -39,20 +39,9 @@
 
     @assert ms ⋅ acc_const ≈ ms ⋅ acc_free
 
-    K = get_elastic_matrix(acft)
-    K = Array(K)
-
-    Ndof2 = ndofs(acft) ÷ 2
-    K = (K[(Ndof2 + 1):end, 1:Ndof2])
-
-    eig = eigen(K)
-
-    zero_eigs = abs.(eig.values) .< 1e-5
-
-    zero_vals = eig.values[zero_eigs]
-    zero_vecs = eig.vectors[:, zero_eigs]
-
-    @show zero_vecs
+    ϕ, ω = get_eigenmodes(acft, 1)
+    
+    @assert isapprox(ω[1], 2.0; rtol = 1e-2)
 
     true
 end
