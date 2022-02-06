@@ -111,7 +111,6 @@ end
 # I haven't yet corrected the flutter prediction feature!
 
 @info "Using assumed modes method to deduce assumed mode eigenvalues"
-@warn "The flutter prediction feature is as of yet untested"
 
 A, eig = assumed_modes_solve(
     acft, q, U∞; 
