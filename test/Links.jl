@@ -22,29 +22,13 @@
 
     K = get_elastic_matrix(acft)
 
-    eig = eigen(Array(K))
-
-    valid_eigvals = collect(
-        1:length(eig.values)
-    )[
-        abs.(eig.values) .< 1e6
-    ]
-
-    @show eig.values[valid_eigvals]
-    @show get_θx(
-        permutedims(eig.vectors[:, valid_eigvals])[1, :]
-    )
-    @show get_θy(
-        permutedims(eig.vectors[:, valid_eigvals])[1, :]
-    )
-    @show get_θz(
-        permutedims(eig.vectors[:, valid_eigvals])[1, :]
-    )
-
     u = get_state(acft, 0.0)
-    set_u(u, i3, 2.0)
-    set_u(u, i4, 0.0)
+
+    set_u(u, i2, 1.5)
+
     qd, _ = state_space(acft, u, 0.0)
+
+    @show get_̇u(qd)
 
     true
 end

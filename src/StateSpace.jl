@@ -1226,51 +1226,6 @@ function state_space(
 		]
 	end
 
-	amp = amplification_factor
-	Ndof2 = ndofs(acft) ÷ 2
-	for lnk in acft.links
-		if lnk.i2 != 0
-			inds1 = (6 * (lnk.i1 - 1) + 1):(6 * lnk.i1)
-			inds2 = (6 * (lnk.i2 - 1) + 1):(6 * lnk.i2)
-
-			vinds1 = inds1 .+ Ndof2
-			vinds2 = inds2 .+ Ndof2
-			
-			dp = acft.points[:, lnk.i2] .- acft.points[:, lnk.i1]
-
-			dx = x[inds2] .- x[inds1] .- [
-				dp;
-				zeros(3)
-			]
-			dv = x[vinds2] .- x[vinds1] .- [
-				ω × dp;
-				zeros(3)
-			]
-
-			m1 = acft.masses[lnk.i1]
-			m2 = acft.masses[lnk.i2]
-
-			kx = - amp * (
-				m1.m + m2.m
-			)
-			kθ = - amp * (
-				m1.I + m2.I
-			)
-
-			constraint_force = [
-				kx .* (
-					dx[1:3] .+ structural_damping .* dv[1:3]
-				);
-				kθ * (
-					dx[4:6] .+ structural_damping .* dv[4:6]
-				)
-			]
-
-			f[inds2] .+= constraint_force
-			f[inds1] .-= constraint_force
-		end
-	end
-
 	qd = similar(f)
 
 	ident = Matrix{Float64}(1e-5 * I, 3, 3)
@@ -1297,6 +1252,9 @@ function state_space(
 		qd[minds] .= inv(mass.I .+ ident) * f[minds]
 	end
 
+	amp = amplification_factor
+	Ndof2 = ndofs(acft) ÷ 2
+
 	for f in fixed_points
 		inds = (6 * (f - 1) + 1):(6 * f)
 		vinds = inds .+ 1
@@ -1322,6 +1280,106 @@ function state_space(
 					- amp .* (dx .+ dv .* structural_damping)
 				end
 			end
+		else false
+			i1 = lnk.i1
+			i2 = lnk.i2
+
+			inds1 = (6 * (i1 - 1) + 1):(6 * i1)
+			inds2 = (6 * (i2 - 1) + 1):(6 * i2)
+
+			dp = acft.points[:, i2] .- acft.points[:, i1]
+
+			r1 = [
+				get_u(x, i1),
+				get_v(x, i1),
+				get_w(x, i1)
+			]
+			r2 = [
+				get_u(x, i2),
+				get_v(x, i2),
+				get_w(x, i2)
+			]
+
+			θ1 = [
+				get_θx(x, i1),
+				get_θy(x, i1),
+				get_θz(x, i1)
+			]
+			θ2 = [
+				get_θx(x, i2),
+				get_θy(x, i2),
+				get_θz(x, i2)
+			]
+
+			v1 = [
+				get_̇u(x, i1),
+				get_̇v(x, i1),
+				get_̇w(x, i1)
+			]
+			v2 = [
+				get_̇u(x, i2),
+				get_̇v(x, i2),
+				get_̇w(x, i2)
+			]
+
+			ω1 = [
+				get_̇θx(x, i1),
+				get_̇θy(x, i1),
+				get_̇θz(x, i1)
+			]
+			ω2 = [
+				get_̇θx(x, i2),
+				get_̇θy(x, i2),
+				get_̇θz(x, i2)
+			]
+
+			a1 = [
+				get_u(qd, i1),
+				get_v(qd, i1),
+				get_w(qd, i1)
+			]
+			a2 = [
+				get_u(qd, i2),
+				get_v(qd, i2),
+				get_w(qd, i2)
+			]
+
+			α1 = [
+				get_θx(qd, i1),
+				get_θy(qd, i1),
+				get_θz(qd, i1)
+			]
+			α2 = [
+				get_θx(qd, i2),
+				get_θy(qd, i2),
+				get_θz(qd, i2)
+			]
+
+			m1 = acft.masses[i1]
+			m2 = acft.masses[i2]
+
+			mtot = m1 + m2
+
+			a_constraint = - amp .* (
+				r2 .- r1 .- dp .+ (v2 .- v1 .- ω × dp) .* structural_damping
+			)
+			α_constraint = - amp .* (
+				θ2 .- θ1 .+ (ω2 .- ω1) .* structural_damping
+			)
+
+			invItot = inv(
+				mtot.I .+ ident
+			)
+			invmtot = 1.0 / (mtot.m + 1e-5)
+
+			qd[inds1] .= [
+				a1 .- m2.m .* a_constraint .* invmtot; 
+				α1 .- invItot * (m2.I * α_constraint)
+			]
+			qd[inds2] .= [
+				a2 .+ m1.m .* a_constraint .* invmtot; 
+				α2 .+ invItot * (m1.I * α_constraint)
+			]
 		end
 	end
 
