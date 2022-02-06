@@ -1271,7 +1271,7 @@ function state_space(
 		if lnk.i2 == 0
 			let f = lnk.i1
 				inds = (6 * (f - 1) + 1):(6 * f)
-				vinds = inds .+ 1
+				vinds = inds .+ Ndof2
 
 				x0 = [acft.points[:, f]; zeros(3)]
 				v0 = [V; ω]
