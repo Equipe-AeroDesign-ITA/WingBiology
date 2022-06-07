@@ -75,7 +75,7 @@ end
 """
 Build linear aerodynamic problem for an aircraft
 """
-function linear_problem(acft, kins, cols, norms, us, xhat, PGβ)
+function linear_problem(acft, kins, cols, norms, us, xhat)
 
     b = [
         begin
@@ -84,7 +84,7 @@ function linear_problem(acft, kins, cols, norms, us, xhat, PGβ)
             (
                 - nu * strip.afl.CL0 - u ⋅ n * strip.afl.CLα
             )
-        end * PGβ for (i, (u, n, strip)) in enumerate(zip(us, norms, acft.wing_strips))
+        end for (i, (u, n, strip)) in enumerate(zip(us, norms, acft.wing_strips))
     ]
 
     Fg = eltype(b)
@@ -101,7 +101,7 @@ function linear_problem(acft, kins, cols, norms, us, xhat, PGβ)
                 A[i, j] = vinfl[id] + vbound[id]
             end
 
-            C = acft.wing_strips[i].afl.CLα * PGβ * (
+            C = acft.wing_strips[i].afl.CLα * (
                 (vinfl .+ vbound) ⋅ 
                 norms[i]
             )

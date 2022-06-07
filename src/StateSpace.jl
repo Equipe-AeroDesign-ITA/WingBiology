@@ -948,7 +948,7 @@ function state_space(
 	Γ, u0s = (
 		aerodynamic_forces ? 
 		begin
-			A, b, As = linear_problem(acft, kins, cols, norms, us, xhat, PGβ)
+			A, b, As = linear_problem(acft, kins, cols, norms, us, xhat)
 
 			Γ = (A \ b) ./ PGβ
 			for i = 1:length(acft.fuselage_cuts)
