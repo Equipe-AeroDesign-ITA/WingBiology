@@ -1025,7 +1025,7 @@ function plain_flap(
 	Airfoil{Fg}(
 		afl.CL0 + Δα * afl.CLα,
 		afl.CLα,
-		afl.Cm0 + Δα * afl.Cmα,
+		afl.Cm0 + Δα * afl.Cmα - Δα * afl.CLα * (1.0 - cperc / 2),
 		afl.Cmα,
 		[
 			afl.polar[1],
@@ -1078,7 +1078,7 @@ function slotted_flap(
 	Airfoil{Fg}(
 		afl.CL0 + Δα * afl.CLα,
 		afl.CLα,
-		afl.Cm0 + Δα * afl.Cmα,
+		afl.Cm0 + Δα * afl.Cmα - Δα * afl.CLα * (1.0 - cperc / 2),
 		afl.Cmα,
 		[
 			afl.polar[1],
@@ -1125,7 +1125,7 @@ function fixed_slat(
 	Airfoil{Fg}(
 		afl.CL0 + Δα * afl.CLα,
 		afl.CLα,
-		afl.Cm0 + Δα * afl.Cmα,
+		afl.Cm0 + Δα * afl.Cmα - Δα * afl.CLα * (1.0 - cperc / 2),
 		afl.Cmα,
 		[
 			afl.polar[1],
@@ -1172,7 +1172,7 @@ function slat(
 	Airfoil{Fg}(
 		afl.CL0 + Δα * afl.CLα,
 		afl.CLα,
-		afl.Cm0 + Δα * afl.Cmα,
+		afl.Cm0 + Δα * afl.Cmα - Δα * afl.CLα * (1.0 - cperc / 2),
 		afl.Cmα,
 		[
 			afl.polar[1],
@@ -1219,7 +1219,7 @@ function Kruger_slat(
 	Airfoil{Fg}(
 		afl.CL0 + Δα * afl.CLα,
 		afl.CLα,
-		afl.Cm0 + Δα * afl.Cmα,
+		afl.Cm0 + Δα * afl.Cmα - Δα * afl.CLα * (1.0 - cperc / 2),
 		afl.Cmα,
 		[
 			afl.polar[1],
